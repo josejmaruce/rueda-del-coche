@@ -1,0 +1,585 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>
+:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;font:14px/1.4 system-ui,sans-serif;background:#fafaf9}
+img{max-width:100%}[hidden]{display:none!important}
+</style>
+<title>Rueda del coche</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+/* Layout: sticky week bar, a column of five day cards (one row on wide screens), counters table underneath. */
+:root{
+  --bg:#eef1ef; --surface:#fdfefd; --surface-2:#e6ebe8;
+  --fg:#141d1a; --muted:#5a6a65; --line:#d3dad7; --line-strong:#b9c3bf;
+  --accent:#0b6a56; --accent-ink:#064a3b; --focus:#0b6a56;
+  --p-jm:#0b6a56;   --p-jm-soft:#d6ede6;
+  --p-sonia:#8a3b86; --p-sonia-soft:#f2dcf0;
+  --p-jose:#a4511b;  --p-jose-soft:#fae2d1;
+  --p-tere:#2a5aa8;  --p-tere-soft:#dae6f7;
+  --p-rosa:#836612;  --p-rosa-soft:#f5eacd;
+  --display:"Archivo","Helvetica Neue",Arial,sans-serif;
+  --body:"IBM Plex Sans","Segoe UI",system-ui,sans-serif;
+  --data:"IBM Plex Mono",ui-monospace,"Cascadia Mono",monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#101614; --surface:#18201d; --surface-2:#212b27;
+    --fg:#e7efec; --muted:#93a39e; --line:#2a3531; --line-strong:#3d4b46;
+    --accent:#5bd3b0; --accent-ink:#9fe8d2; --focus:#5bd3b0;
+    --p-jm:#5bd3b0;   --p-jm-soft:#123a31;
+    --p-sonia:#e0a6db; --p-sonia-soft:#3a2039;
+    --p-jose:#f0a269;  --p-jose-soft:#3d2316;
+    --p-tere:#95bcf2;  --p-tere-soft:#1b2c45;
+    --p-rosa:#e0c25f;  --p-rosa-soft:#352c12;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#101614; --surface:#18201d; --surface-2:#212b27;
+  --fg:#e7efec; --muted:#93a39e; --line:#2a3531; --line-strong:#3d4b46;
+  --accent:#5bd3b0; --accent-ink:#9fe8d2; --focus:#5bd3b0;
+  --p-jm:#5bd3b0;   --p-jm-soft:#123a31;
+  --p-sonia:#e0a6db; --p-sonia-soft:#3a2039;
+  --p-jose:#f0a269;  --p-jose-soft:#3d2316;
+  --p-tere:#95bcf2;  --p-tere-soft:#1b2c45;
+  --p-rosa:#e0c25f;  --p-rosa-soft:#352c12;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);line-height:1.45;margin:0}
+.wrap{max-width:1180px;margin:0 auto;padding-inline:16px;padding-block:0 48px}
+
+/* ---- week bar ---- */
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);
+  border-bottom:1px solid var(--line);padding-block:14px 12px;margin-bottom:22px}
+.bar-top{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px}
+h1{font-family:var(--display);font-weight:700;font-size:clamp(1.3rem,4vw,1.65rem);letter-spacing:-.015em;margin:0}
+.sub{color:var(--muted);font-size:.86rem;margin:0}
+.nav{display:flex;align-items:center;gap:8px;margin-top:12px;flex-wrap:wrap}
+.nav-week{font-family:var(--data);font-size:.9rem;font-weight:600;min-width:11.5ch;text-align:center}
+.nav-week small{display:block;font-family:var(--body);font-weight:400;font-size:.7rem;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+button{font:inherit;color:inherit;cursor:pointer}
+.ghost{background:var(--surface);border:1px solid var(--line-strong);border-radius:9px;
+  padding:7px 11px;font-size:.84rem;line-height:1;display:inline-flex;align-items:center;gap:6px}
+.ghost:hover{border-color:var(--accent);color:var(--accent)}
+.spacer{flex:1 1 auto}
+.status{font-size:.78rem;color:var(--muted);display:flex;align-items:center;gap:7px}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--line-strong);flex:0 0 auto}
+.dot.ok{background:var(--accent)}
+.dot.warn{background:#c2762a}
+.notice{margin:0 0 18px;padding:10px 13px;border:1px solid var(--line);border-left:3px solid #c2762a;
+  border-radius:8px;background:var(--surface);font-size:.84rem;color:var(--muted)}
+
+/* ---- day cards ---- */
+.days{display:grid;grid-template-columns:repeat(auto-fit,minmax(205px,1fr));gap:12px;align-items:start}
+.day{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:13px 13px 12px;min-width:0}
+.day.today{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.day-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;
+  padding-bottom:9px;border-bottom:1px dashed var(--line);margin-bottom:11px}
+.day-name{font-family:var(--display);font-weight:600;font-size:1rem;letter-spacing:-.01em}
+.day-date{font-family:var(--data);font-size:.76rem;color:var(--muted)}
+.day.today .day-date{color:var(--accent);font-weight:600}
+.group + .group{margin-top:13px;padding-top:12px;border-top:1px solid var(--line)}
+.group-label{font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);
+  display:flex;align-items:center;gap:6px;margin-bottom:7px}
+.chips{display:flex;flex-direction:column;gap:5px}
+.chip{display:flex;align-items:center;gap:8px;width:100%;text-align:left;
+  background:transparent;border:1px solid var(--line);border-radius:9px;padding:7px 9px;font-size:.87rem;
+  transition:border-color .12s,background .12s}
+.chip:hover{border-color:var(--line-strong);background:var(--surface-2)}
+.chip .wheel{width:15px;height:15px;flex:0 0 auto;opacity:0;color:currentColor}
+.chip[aria-pressed="true"]{font-weight:600;background:var(--tint-soft);border-color:var(--tint);color:var(--tint)}
+.chip[aria-pressed="true"] .wheel{opacity:1}
+.chip[disabled]{cursor:default;opacity:.75}
+.chip .n{margin-left:auto;font-family:var(--data);font-size:.72rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.chip[aria-pressed="true"] .n{color:inherit}
+.hint{margin-top:7px;font-size:.72rem;color:var(--muted)}
+.hint b{color:var(--fg);font-weight:600}
+.clear{margin-top:7px;background:none;border:0;padding:0;font-size:.72rem;color:var(--muted);text-decoration:underline}
+.clear:hover{color:var(--accent)}
+
+/* ---- counters ---- */
+.count-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:10px 14px;margin:34px 0 12px}
+h2{font-family:var(--display);font-weight:600;font-size:1.1rem;margin:0;letter-spacing:-.01em}
+.seg{display:inline-flex;border:1px solid var(--line-strong);border-radius:9px;overflow:hidden;background:var(--surface)}
+.seg button{background:none;border:0;padding:6px 11px;font-size:.8rem;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--surface);font-weight:600}
+.table-scroll{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:430px}
+th,td{padding:10px 12px;text-align:center;border-bottom:1px solid var(--line);white-space:nowrap}
+thead th{font-size:.68rem;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:600;
+  background:var(--surface-2)}
+th.who,td.who{text-align:left;font-weight:600}
+td.who{font-family:var(--body);font-size:.9rem}
+td{font-family:var(--data);font-size:.95rem;font-variant-numeric:tabular-nums}
+td.zero{color:var(--muted)}
+td.na{color:var(--line-strong)}
+tbody tr:last-child td{border-bottom:0}
+th.total,td.total{border-left:1px solid var(--line);font-weight:600}
+td.total{font-size:1.05rem}
+.swatch{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:8px;vertical-align:baseline}
+.foot{margin-top:14px;font-size:.78rem;color:var(--muted);max-width:62ch}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px;border-radius:6px}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="wheel" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round">
+    <circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.1"/>
+    <path d="M12 3v5.9M4.2 16.2l4.9-2.8M19.8 16.2l-4.9-2.8"/>
+  </symbol>
+</svg>
+
+<div class="wrap">
+  <header class="bar">
+    <div class="bar-top">
+      <h1>Rueda del coche</h1>
+      <p class="sub">Marca quién conduce cada día y lleva la cuenta de los viajes.</p>
+    </div>
+    <div class="nav">
+      <button class="ghost" id="prev" type="button">‹ Semana</button>
+      <div class="nav-week"><span id="weekLabel">—</span><small id="weekSub">semana</small></div>
+      <button class="ghost" id="next" type="button">Semana ›</button>
+      <button class="ghost" id="today" type="button">Hoy</button>
+      <span class="spacer"></span>
+      <span class="status"><span class="dot" id="dot"></span><span id="statusText">Conectando…</span></span>
+    </div>
+  </header>
+
+  <p class="notice" id="notice" hidden></p>
+
+  <div class="days" id="days"></div>
+
+  <div class="count-head">
+    <h2>Viajes por persona</h2>
+    <div class="seg" role="group" aria-label="Periodo del contador">
+      <button type="button" id="pTotal" aria-pressed="true">Acumulado</button>
+      <button type="button" id="pWeek" aria-pressed="false">Esta semana</button>
+    </div>
+  </div>
+  <div class="table-scroll">
+    <table>
+      <thead>
+        <tr>
+          <th class="who">Persona</th>
+          <th>Lun</th><th>Mar</th><th>Mié</th><th>Jue</th><th>Vie</th>
+          <th class="total">Total</th>
+        </tr>
+      </thead>
+      <tbody id="counts"></tbody>
+    </table>
+  </div>
+  <p class="foot" id="foot">Un viaje = un día al volante. Las casillas en gris son días en los que esa persona no va en el coche.</p>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var PEOPLE = {
+    jm:    {name:"Juan Manuel", tint:"--p-jm"},
+    sonia: {name:"Sonia",       tint:"--p-sonia"},
+    jose:  {name:"José",        tint:"--p-jose"},
+    tere:  {name:"Tere",        tint:"--p-tere"},
+    rosa:  {name:"Rosa",        tint:"--p-rosa"}
+  };
+
+  var DAYS = [
+    {key:"lun", name:"Lunes",     offset:0, groups:[{key:"a", label:null,      members:["jm","sonia","jose"]}]},
+    {key:"mar", name:"Martes",    offset:1, groups:[{key:"a", label:"Coche 1", members:["jm","sonia"]},
+                                                    {key:"b", label:"Coche 2", members:["tere","jose"]}]},
+    {key:"mie", name:"Miércoles", offset:2, groups:[{key:"a", label:null,      members:["jm","rosa","jose"]}]},
+    {key:"jue", name:"Jueves",    offset:3, groups:[{key:"a", label:null,      members:["jm","sonia","jose"]}]},
+    {key:"vie", name:"Viernes",   offset:4, groups:[{key:"a", label:"Coche 1", members:["jm","sonia"]},
+                                                    {key:"b", label:"Coche 2", members:["tere","jose"]}]}
+  ];
+
+  // Which weekdays each person actually rides, for the counter grid.
+  var RIDES = {};
+  DAYS.forEach(function(d){
+    d.groups.forEach(function(g){
+      g.members.forEach(function(p){ (RIDES[p] = RIDES[p] || {})[d.key] = true; });
+    });
+  });
+
+  // ---- dates -------------------------------------------------------------
+  function iso(d){
+    return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+  }
+  function mondayOf(d){
+    var x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    x.setDate(x.getDate() - ((x.getDay()+6)%7));
+    return x;
+  }
+  function addDays(d,n){
+    var x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    x.setDate(x.getDate()+n);
+    return x;
+  }
+  var fmtDay = new Intl.DateTimeFormat("es-ES", {day:"numeric", month:"short"});
+  var fmtFull = new Intl.DateTimeFormat("es-ES", {day:"numeric", month:"long"});
+
+  // ---- state -------------------------------------------------------------
+  var state = {
+    monday: mondayOf(new Date()),
+    weeks: Object.create(null),   // weekId -> {"lun-a":"jm", ...}
+    pending: Object.create(null),  // slotKey -> value, while a write is in flight
+    period: "total",
+    ready: false,
+    canWrite: true,
+    db: null
+  };
+  var todayISO = iso(new Date());
+
+  // Sin la base de datos compartida de claude.ai, la rueda se guarda en este navegador.
+  var LS_KEY = "rueda-del-coche/semanas";
+  function loadLocal(){
+    try {
+      var parsed = JSON.parse(localStorage.getItem(LS_KEY) || "null");
+      if (!parsed || typeof parsed !== "object") return Object.create(null);
+      var out = Object.create(null);
+      Object.keys(parsed).forEach(function(k){
+        if (parsed[k] && typeof parsed[k] === "object") out[k] = parsed[k];
+      });
+      return out;
+    } catch(e){ return Object.create(null); }
+  }
+  function saveLocal(){
+    try { localStorage.setItem(LS_KEY, JSON.stringify(state.weeks)); } catch(e){ /* almacenamiento no disponible */ }
+  }
+
+  function weekId(monday){ return "s-" + iso(monday); }
+  function slots(weekId){ return state.weeks[weekId] || {}; }
+  function driverOf(wid, slotKey){
+    var p = wid + "|" + slotKey;
+    if (p in state.pending) return state.pending[p];
+    return slots(wid)[slotKey] || null;
+  }
+
+  // Trips per person per weekday, over the weeks in scope.
+  function tally(onlyWeek){
+    var out = {};
+    Object.keys(PEOPLE).forEach(function(p){ out[p] = {lun:0,mar:0,mie:0,jue:0,vie:0,total:0}; });
+    Object.keys(state.weeks).forEach(function(wid){
+      if (onlyWeek && wid !== onlyWeek) return;
+      var w = state.weeks[wid];
+      Object.keys(w).forEach(function(slotKey){
+        var day = slotKey.split("-")[0];
+        var person = (wid + "|" + slotKey) in state.pending ? state.pending[wid + "|" + slotKey] : w[slotKey];
+        if (person && out[person] && out[person][day] !== undefined){ out[person][day]++; out[person].total++; }
+      });
+    });
+    // in-flight writes for slots not yet in the snapshot
+    Object.keys(state.pending).forEach(function(k){
+      var parts = k.split("|"), wid = parts[0], slotKey = parts[1];
+      if (onlyWeek && wid !== onlyWeek) return;
+      if (slots(wid)[slotKey] !== undefined) return;
+      var person = state.pending[k], day = slotKey.split("-")[0];
+      if (person && out[person] && out[person][day] !== undefined){ out[person][day]++; out[person].total++; }
+    });
+    return out;
+  }
+
+  // Whoever has driven that group's route least often so far.
+  function nextUp(group, dayKey, counts){
+    var best = null, bestN = Infinity;
+    group.members.forEach(function(p){
+      var n = counts[p][dayKey];
+      if (n < bestN){ bestN = n; best = p; }
+    });
+    return best;
+  }
+
+  // ---- render ------------------------------------------------------------
+  var elDays = document.getElementById("days");
+  var elCounts = document.getElementById("counts");
+  var elWeekLabel = document.getElementById("weekLabel");
+  var elWeekSub = document.getElementById("weekSub");
+  var elStatus = document.getElementById("statusText");
+  var elDot = document.getElementById("dot");
+  var elNotice = document.getElementById("notice");
+
+  function setStatus(text, kind){
+    elStatus.textContent = text;
+    elDot.className = "dot" + (kind ? " " + kind : "");
+  }
+
+  function render(){
+    var wid = weekId(state.monday);
+    var friday = addDays(state.monday, 4);
+    elWeekLabel.textContent = fmtDay.format(state.monday) + " – " + fmtDay.format(friday);
+    elWeekSub.textContent = state.monday.getFullYear() === friday.getFullYear()
+      ? String(friday.getFullYear()) : state.monday.getFullYear() + "/" + friday.getFullYear();
+
+    var allTime = tally(null);
+    elDays.textContent = "";
+
+    DAYS.forEach(function(day){
+      var date = addDays(state.monday, day.offset);
+      var dISO = iso(date);
+      var card = document.createElement("section");
+      card.className = "day" + (dISO === todayISO ? " today" : "");
+
+      var head = document.createElement("div");
+      head.className = "day-head";
+      var nm = document.createElement("span");
+      nm.className = "day-name";
+      nm.textContent = day.name;
+      var dt = document.createElement("span");
+      dt.className = "day-date";
+      dt.textContent = dISO === todayISO ? "hoy" : fmtDay.format(date);
+      head.appendChild(nm); head.appendChild(dt);
+      card.appendChild(head);
+
+      day.groups.forEach(function(group){
+        var slotKey = day.key + "-" + group.key;
+        var current = driverOf(wid, slotKey);
+        var box = document.createElement("div");
+        box.className = "group";
+
+        if (group.label){
+          var lab = document.createElement("div");
+          lab.className = "group-label";
+          lab.textContent = group.label;
+          box.appendChild(lab);
+        }
+
+        var chips = document.createElement("div");
+        chips.className = "chips";
+        group.members.forEach(function(p){
+          var b = document.createElement("button");
+          b.type = "button";
+          b.className = "chip";
+          b.style.setProperty("--tint", "var(" + PEOPLE[p].tint + ")");
+          b.style.setProperty("--tint-soft", "var(" + PEOPLE[p].tint + "-soft)");
+          b.setAttribute("aria-pressed", current === p ? "true" : "false");
+          b.disabled = !state.ready || !state.canWrite;
+          b.title = current === p
+            ? PEOPLE[p].name + " conduce el " + day.name.toLowerCase() + " " + fmtFull.format(date)
+            : "Marcar a " + PEOPLE[p].name + " como conductor";
+
+          var sv = document.createElementNS("http://www.w3.org/2000/svg","svg");
+          sv.setAttribute("class","wheel");
+          var use = document.createElementNS("http://www.w3.org/2000/svg","use");
+          use.setAttribute("href","#wheel");
+          sv.appendChild(use);
+
+          var nameSpan = document.createElement("span");
+          nameSpan.textContent = PEOPLE[p].name;
+          var n = document.createElement("span");
+          n.className = "n";
+          n.textContent = allTime[p][day.key];
+          n.title = "Viajes de " + PEOPLE[p].name + " en " + day.name.toLowerCase();
+
+          b.appendChild(sv); b.appendChild(nameSpan); b.appendChild(n);
+          b.addEventListener("click", function(){ pick(wid, slotKey, p); });
+          chips.appendChild(b);
+        });
+        box.appendChild(chips);
+
+        if (current){
+          var clear = document.createElement("button");
+          clear.type = "button";
+          clear.className = "clear";
+          clear.textContent = "Quitar";
+          clear.disabled = !state.ready || !state.canWrite;
+          clear.addEventListener("click", function(){ pick(wid, slotKey, null); });
+          box.appendChild(clear);
+        } else if (state.ready) {
+          var who = nextUp(group, day.key, allTime);
+          var hint = document.createElement("p");
+          hint.className = "hint";
+          hint.appendChild(document.createTextNode("Le toca a "));
+          var strong = document.createElement("b");
+          strong.textContent = PEOPLE[who].name;
+          hint.appendChild(strong);
+          box.appendChild(hint);
+        }
+
+        card.appendChild(box);
+      });
+
+      elDays.appendChild(card);
+    });
+
+    renderCounts(state.period === "week" ? wid : null);
+  }
+
+  function renderCounts(onlyWeek){
+    var counts = tally(onlyWeek);
+    elCounts.textContent = "";
+    Object.keys(PEOPLE).forEach(function(p){
+      var tr = document.createElement("tr");
+      var who = document.createElement("td");
+      who.className = "who";
+      var sw = document.createElement("span");
+      sw.className = "swatch";
+      sw.style.background = "var(" + PEOPLE[p].tint + ")";
+      who.appendChild(sw);
+      who.appendChild(document.createTextNode(PEOPLE[p].name));
+      tr.appendChild(who);
+
+      ["lun","mar","mie","jue","vie"].forEach(function(dk){
+        var td = document.createElement("td");
+        if (!(RIDES[p] && RIDES[p][dk])){
+          td.className = "na";
+          td.textContent = "·";
+          td.title = PEOPLE[p].name + " no va este día";
+        } else {
+          var v = counts[p][dk];
+          td.className = v === 0 ? "zero" : "";
+          td.textContent = v;
+        }
+        tr.appendChild(td);
+      });
+
+      var tot = document.createElement("td");
+      tot.className = "total" + (counts[p].total === 0 ? " zero" : "");
+      tot.textContent = counts[p].total;
+      tr.appendChild(tot);
+      elCounts.appendChild(tr);
+    });
+  }
+
+  // ---- writes ------------------------------------------------------------
+  var chains = Object.create(null);
+
+  function pick(wid, slotKey, person){
+    var current = driverOf(wid, slotKey);
+    var value = (current === person) ? null : person;   // clicking the driver again clears it
+    var pk = wid + "|" + slotKey;
+    state.pending[pk] = value;
+    render();
+
+    if (!state.db){ // sin tienda compartida: se queda en este navegador
+      delete state.pending[pk];
+      state.weeks[wid] = state.weeks[wid] || {};
+      if (value) state.weeks[wid][slotKey] = value; else delete state.weeks[wid][slotKey];
+      if (!Object.keys(state.weeks[wid]).length) delete state.weeks[wid];
+      saveLocal();
+      setStatus("Guardado en este navegador", "ok");
+      render();
+      return;
+    }
+
+    var prev = chains[wid] || Promise.resolve();
+    chains[wid] = prev.catch(function(){}).then(function(){
+      var body = Object.assign({}, state.weeks[wid]);
+      Object.keys(state.pending).forEach(function(k){
+        var parts = k.split("|");
+        if (parts[0] !== wid) return;
+        if (state.pending[k]) body[parts[1]] = state.pending[k];
+        else delete body[parts[1]];
+      });
+      setStatus("Guardando…", "");
+      return state.db.doc("semanas/" + wid).set({
+        asignaciones: body,
+        actualizado: new Date().toISOString()
+      }).then(function(){
+        state.weeks[wid] = body;
+        delete state.pending[pk];
+        setStatus("Guardado", "ok");
+        render();
+      });
+    }).catch(function(e){
+      delete state.pending[pk];
+      var code = (e && e.code) || "";
+      if (code === "invalid_argument" || code === "not_granted"){
+        state.canWrite = false;
+        showNotice("Puedes consultar la rueda pero no cambiarla: tu acceso es de solo lectura.");
+        setStatus("Solo lectura", "warn");
+      } else if (code === "revoked"){
+        state.canWrite = false;
+        setStatus("Sin acceso", "warn");
+      } else {
+        setStatus("No se pudo guardar. Vuelve a marcarlo.", "warn");
+      }
+      render();
+    });
+  }
+
+  function showNotice(text){
+    elNotice.textContent = text;
+    elNotice.hidden = false;
+  }
+
+  // ---- navigation --------------------------------------------------------
+  document.getElementById("prev").addEventListener("click", function(){
+    state.monday = addDays(state.monday, -7); render();
+  });
+  document.getElementById("next").addEventListener("click", function(){
+    state.monday = addDays(state.monday, 7); render();
+  });
+  document.getElementById("today").addEventListener("click", function(){
+    state.monday = mondayOf(new Date()); render();
+  });
+  var bTotal = document.getElementById("pTotal"), bWeek = document.getElementById("pWeek");
+  function setPeriod(p){
+    state.period = p;
+    bTotal.setAttribute("aria-pressed", p === "total" ? "true" : "false");
+    bWeek.setAttribute("aria-pressed", p === "week" ? "true" : "false");
+    renderCounts(p === "week" ? weekId(state.monday) : null);
+  }
+  bTotal.addEventListener("click", function(){ setPeriod("total"); });
+  bWeek.addEventListener("click", function(){ setPeriod("week"); });
+
+  // ---- boot --------------------------------------------------------------
+  render();
+  setStatus("Conectando…", "");
+
+  (async function(){
+    var db = null, user = null;
+    try { db = window.claude && window.claude.use ? await window.claude.use("db") : null; } catch(e){ db = null; }
+    try { user = window.claude && window.claude.use ? await window.claude.use("user") : null; } catch(e){ user = null; }
+
+    if (!db){
+      state.db = null;
+      state.weeks = loadLocal();
+      state.ready = true;
+      setStatus("Guardado en este navegador", "ok");
+      showNotice("Esta copia guarda la rueda en este navegador: los datos no se comparten con los demás y desaparecen si borras los datos del sitio.");
+      render();
+      return;
+    }
+
+    state.db = db;
+    if (user && typeof user.can === "function"){
+      try {
+        var w = await user.can("data.write");
+        if (w === false){
+          state.canWrite = false;
+          showNotice("Puedes consultar la rueda pero no cambiarla: tu acceso es de solo lectura.");
+        }
+      } catch(e){ /* keep inputs enabled and let a refused write decide */ }
+    }
+
+    db.collection("semanas").onSnapshot(function(snap){
+      var next = Object.create(null);
+      snap.docs.forEach(function(d){
+        var data = d.data() || {};
+        var a = data.asignaciones;
+        next[d.id] = (a && typeof a === "object") ? a : {};
+      });
+      state.weeks = next;
+      state.ready = true;
+      if (state.canWrite) setStatus(snap.empty ? "Listo para empezar" : "Guardado", "ok");
+      else setStatus("Solo lectura", "warn");
+      render();
+    }, function(err){
+      state.ready = true;
+      var code = (err && err.code) || "";
+      if (code === "revoked"){ state.canWrite = false; setStatus("Sin acceso", "warn"); }
+      else setStatus("Conexión perdida. Recarga la página.", "warn");
+      render();
+    });
+  })();
+})();
+</script>
+</body>
+</html>
