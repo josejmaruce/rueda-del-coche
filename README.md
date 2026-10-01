@@ -40,7 +40,9 @@ La misma página, publicada como artefacto en claude.ai, usa en su lugar la base
 datos compartida del artefacto, de modo que todo el grupo ve y actualiza la misma
 rueda. El código detecta cuál de las dos tiene disponible al cargar.
 
-## Publicar con GitHub Pages
+## Publicado
 
-En **Settings → Pages**, origen *Deploy from a branch*, rama `main` y carpeta `/ (root)`.
-La página queda en `https://<usuario>.github.io/<repositorio>/`.
+El panel está en línea en **https://josejmaruce.github.io/rueda-del-coche/**
+
+GitHub Pages lo sirve desde la rama `main`, carpeta `/ (root)`, así que cada push a
+`main` actualiza el sitio en un minuto.
