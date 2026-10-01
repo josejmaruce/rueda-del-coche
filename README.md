@@ -23,22 +23,51 @@ Para cambiar los grupos, edita las constantes `PEOPLE` y `DAYS` al principio del
 
 - Una tarjeta por día, con su fecha real. Se navega entre semanas con
   **‹ Semana** / **Semana ›**, y **Hoy** vuelve a la semana en curso.
-- Pulsa el nombre de quien conduce ese día; se marca con un volante. Pulsarlo otra
-  vez, o **Quitar**, lo deshace.
+- Cada uno elige su nombre en **Soy**. Queda guardado en su dispositivo, su nombre
+  aparece marcado con una etiqueta *tú* y le sale el botón **Hoy conduzco yo**, que
+  es un atajo de un toque para el coche que le toca hoy.
+- Para marcar cualquier otro día basta con pulsar el nombre de quien conduce.
+  Pulsarlo otra vez, o **Quitar**, lo deshace.
 - Mientras un coche no tiene conductor, la tarjeta sugiere **«Le toca a…»**: la
   persona de ese grupo que menos veces ha conducido ese día de la semana.
 - La tabla de abajo cuenta los viajes por persona y por día de la semana, en
   acumulado o solo de la semana que estés viendo. Los puntos grises son días en los
   que esa persona no va en el coche.
 
-## Dónde se guardan los datos
+## Base de datos compartida
 
-Esta copia guarda la rueda en el **almacenamiento local del navegador**: los datos
-se quedan en el dispositivo de quien la abre y no se comparten entre personas.
+Para que un cambio de cualquiera aparezca al momento en el móvil de los demás, la
+página usa **Firebase Realtime Database** (plan gratuito de Google). Nadie necesita
+registrarse ni iniciar sesión: basta con abrir el enlace.
 
-La misma página, publicada como artefacto en claude.ai, usa en su lugar la base de
-datos compartida del artefacto, de modo que todo el grupo ve y actualiza la misma
-rueda. El código detecta cuál de las dos tiene disponible al cargar.
+La conexión se configura en `config.js`. Mientras ese archivo valga `null`, la
+página sigue funcionando, pero guarda los datos solo en el navegador de cada uno y
+no se comparten.
+
+### Darla de alta (una sola vez)
+
+1. En [console.firebase.google.com](https://console.firebase.google.com), crear un
+   proyecto (Google Analytics no hace falta).
+2. **Compilación → Realtime Database → Crear base de datos**. Elegir la región de
+   Europa y empezar en **modo de prueba**.
+3. En **Reglas**, dejar la rama `semanas` abierta a lectura y escritura:
+
+   ```json
+   {
+     "rules": {
+       "semanas": { ".read": true, ".write": true }
+     }
+   }
+   ```
+
+4. **Configuración del proyecto → Tus apps → Web** para registrar una app y copiar
+   su objeto de configuración.
+5. Pegarlo en `config.js` y hacer push. El sitio queda sincronizado en un minuto.
+
+Esos valores no son secretos: viajan en cualquier web que use Firebase. Sí conviene
+saber que, con las reglas abiertas, cualquiera que llegue a la dirección del
+proyecto podría modificar la rueda. Para cinco personas y un cuadro de turnos es un
+riesgo asumible; si molestara, se cierra con autenticación anónima.
 
 ## Publicado
 
